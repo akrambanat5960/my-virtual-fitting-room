@@ -2,40 +2,37 @@ import streamlit as st
 import fal_client
 import os
 
-# --- PAGE CONFIG ---
+# This checks for your secret key automatically
+if "FAL_KEY" in st.secrets:
+    os.environ["FAL_KEY"] = st.secrets["FAL_KEY"]
+else:
+    st.error("Missing FAL_KEY! Go to Settings > Secrets in Streamlit to add it.")
+
+# --- APP INTERFACE ---
 st.set_page_config(page_title="AI Dressing Room", layout="centered")
 st.title("👗 My AI Dressing Room")
 
-# --- STEP 1: LOGIN ---
-# You will get this key from fal.ai for free
-fal_key = st.text_input("Enter your FAL_KEY", type="password")
-os.environ["FAL_KEY"] = fal_key
-
-# --- STEP 2: UPLOAD PHOTOS ---
 st.header("1. Upload Your Photo")
-user_img = st.file_uploader("Take a photo or upload one", type=['jpg', 'png'], key="user")
+user_img = st.file_uploader("Take a photo of yourself", type=['jpg', 'png'], key="user")
 
 st.header("2. Upload the Dress")
-dress_img = st.file_uploader("Upload the dress image", type=['jpg', 'png'], key="dress")
+dress_img = st.file_uploader("Upload the dress to try on", type=['jpg', 'png'], key="dress")
 
-# --- STEP 3: RUN THE AI ---
 if st.button("✨ Fit the Dress!"):
-    if not fal_key:
-        st.error("Please enter your API key first!")
-    elif user_img and dress_img:
+    if user_img and dress_img:
         with st.spinner("AI is sewing the dress to fit you..."):
-            # This sends your photos to the AI server
-            handler = fal_client.submit(
-                "fal-ai/fashn/tryon/v1.5",
-                arguments={
-                    "model_image": user_img,
-                    "garment_image": dress_img,
-                    "category": "one-pieces"
-                },
-            )
-            result = handler.get()
-            
-            # Show the result!
-            st.image(result['images'][0]['url'], caption="Your New Look!")
+            try:
+                handler = fal_client.submit(
+                    "fal-ai/fashn/tryon/v1.5",
+                    arguments={
+                        "model_image": user_img,
+                        "garment_image": dress_img,
+                        "category": "one-pieces"
+                    },
+                )
+                result = handler.get()
+                st.image(result['images'][0]['url'], caption="Your New Look!")
+            except Exception as e:
+                st.error(f"AI Error: {e}")
     else:
-        st.warning("Please upload both photos.")
+        st.warning("Please upload both photos first.")
