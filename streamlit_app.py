@@ -22,11 +22,11 @@ if st.button("✨ Fit the Dress!"):
     if user_img and dress_img:
         with st.spinner("AI is sewing the dress to fit you..."):
             try:
-                # 1. Upload images to fal.ai to get valid URLs
-                user_url = fal_client.upload_file(user_img)
-                dress_url = fal_client.upload_file(dress_img)
+                # FIX: We use .getvalue() to turn the Streamlit object into raw image data
+                user_url = fal_client.upload_file(user_img.getvalue())
+                dress_url = fal_client.upload_file(dress_img.getvalue())
 
-                # 2. Use those URLs to run the try-on
+                # Now we send those valid URLs to the AI
                 handler = fal_client.submit(
                     "fal-ai/fashn/tryon/v1.5",
                     arguments={
@@ -37,7 +37,7 @@ if st.button("✨ Fit the Dress!"):
                 )
                 result = handler.get()
                 
-                # 3. Show the result!
+                # Show the result!
                 st.image(result['images'][0]['url'], caption="Your New Look!")
                 
             except Exception as e:
