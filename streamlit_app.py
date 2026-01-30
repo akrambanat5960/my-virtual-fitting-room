@@ -22,16 +22,24 @@ if st.button("✨ Fit the Dress!"):
     if user_img and dress_img:
         with st.spinner("AI is sewing the dress to fit you..."):
             try:
+                # 1. Upload images to fal.ai to get valid URLs
+                user_url = fal_client.upload_file(user_img)
+                dress_url = fal_client.upload_file(dress_img)
+
+                # 2. Use those URLs to run the try-on
                 handler = fal_client.submit(
                     "fal-ai/fashn/tryon/v1.5",
                     arguments={
-                        "model_image": user_img,
-                        "garment_image": dress_img,
+                        "model_image": user_url,
+                        "garment_image": dress_url,
                         "category": "one-pieces"
                     },
                 )
                 result = handler.get()
+                
+                # 3. Show the result!
                 st.image(result['images'][0]['url'], caption="Your New Look!")
+                
             except Exception as e:
                 st.error(f"AI Error: {e}")
     else:
