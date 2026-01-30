@@ -1,3 +1,4 @@
+import io
 import streamlit as st
 import fal_client
 import os
@@ -22,11 +23,15 @@ if st.button("✨ Fit the Dress!"):
     if user_img and dress_img:
         with st.spinner("AI is sewing the dress to fit you..."):
             try:
-                # FIX: We use .getvalue() to turn the Streamlit object into raw image data
-                user_url = fal_client.upload_file(user_img.getvalue())
-                dress_url = fal_client.upload_file(dress_img.getvalue())
+                # 1. Turn the uploaded photos into "Binary Files" the AI understands
+                user_data = io.BytesIO(user_img.getvalue())
+                dress_data = io.BytesIO(dress_img.getvalue())
 
-                # Now we send those valid URLs to the AI
+                # 2. Upload those files to get valid URLs
+                user_url = fal_client.upload_file(user_data)
+                dress_url = fal_client.upload_file(dress_data)
+
+                # 3. Run the AI try-on
                 handler = fal_client.submit(
                     "fal-ai/fashn/tryon/v1.5",
                     arguments={
@@ -37,7 +42,7 @@ if st.button("✨ Fit the Dress!"):
                 )
                 result = handler.get()
                 
-                # Show the result!
+                # 4. Show the result!
                 st.image(result['images'][0]['url'], caption="Your New Look!")
                 
             except Exception as e:
